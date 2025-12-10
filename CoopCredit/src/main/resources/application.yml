@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: credit-application-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/coopcredit_db  # Conecta a PostgreSQL
+    username: coopcredit_user
+    password: coopcredit_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate          # NO modifica el schema (Flyway lo maneja)
+    show-sql: true                # Muestra las consultas SQL en consola
+    properties:
+      hibernate:
+        format_sql: true          # Formatea el SQL para que sea legible
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true                 # Activa Flyway para migraciones
+    baseline-on-migrate: true     # Crea baseline si la BD ya existe
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.coopcredit: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+app:
+  jwt:
+    secret: mySecretKeyForJwtTokenGenerationWithAtLeast256BitsOfDataToEnsureSecurity
+    expiration: 86400000
+
+risk-central:
+  url: http://localhost:8081

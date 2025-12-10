@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Servicio de PostgreSQL
+  postgres-dev:
+    container_name: coopcredit-postgres-dev    # Nombre del contenedor
+    image: postgres:16-alpine                  # Imagen de PostgreSQL
+    restart: unless-stopped                    # Se reinicia automáticamente si falla
+
+    # Variables de entorno para configurar PostgreSQL
+    environment:
+      POSTGRES_DB: coopcredit_db              # Nombre de la base de datos
+      POSTGRES_USER: coopcredit_user          # Usuario
+      POSTGRES_PASSWORD: coopcredit_pass      # Contraseña
+      PGDATA: /var/lib/postgresql/data/pgdata # Carpeta donde guarda los datos
+
+    # Mapeo de puertos: tu_maquina:contenedor
+    ports:
+      - "5433:5432"                           # Puerto 5432 de tu PC → puerto 5432 del contenedor
+
+    # Volúmenes: para que los datos persistan aunque elimines el contenedor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data                    # Datos persistentes
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql  # Script inicial (opcional)
+
+    # Red para que los contenedores se comuniquen entre sí
+    networks:
+      - coopcredit-network
+
+    # Healthcheck: verifica que PostgreSQL esté listo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coopcredit_user -d coopcredit_db"]
+      interval: 10s      # Verifica cada 10 segundos
+      timeout: 5s        # Timeout de 5 segundos
+      retries: 5         # 5 intentos antes de marcarlo como "unhealthy"
+
+# Definición de volúmenes (almacenamiento persistente)
+volumes:
+  postgres_data:
+    driver: local       # Almacenamiento local en tu máquina
+
+# Definición de redes (para comunicación entre contenedores)
+networks:
+  coopcredit-network:
+    driver: bridge      # Tipo de red: bridge (red privada para los contenedores)
